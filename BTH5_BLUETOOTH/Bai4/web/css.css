@@ -1,0 +1,50 @@
+/* style.css */
+
+body {
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f2f5;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    width: 95%;
+    max-width: 900px;
+    margin: 20px auto;
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #007bff; /* Màu xanh dương */
+    margin-bottom: 25px;
+    font-size: 1.8em;
+}
+
+.data-display {
+    margin-bottom: 30px;
+    font-size: 1.3em;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.data-display strong {
+    color: #dc3545; /* Màu đỏ */
+    font-weight: bold;
+}
+
+.chart-box {
+    position: relative;
+    height: 40vh; /* Chiều cao cố định cho biểu đồ */
+    padding: 10px;
+}

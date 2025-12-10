@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Biểu đồ Nhiệt độ DHT11 Real-time</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; background-color: #f4f4f4; }
+        #chartContainer 
+        {
+            width: 90%;
+            max-width: 800px; /* Giới hạn kích thước biểu đồ */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        .data-display { margin-bottom: 20px; font-size: 1.2em; }
+        .data-display strong { color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <h1>🌡️ Biểu đồ Nhiệt độ DHT11 Real-time</h1>
+    <div class="data-display">
+        Nhiệt độ hiện tại: <strong id="currentTemp">-</strong> °C | 
+        Độ ẩm hiện tại: <strong id="currentHum">-</strong> %RH
+    </div>
+    
+    <div id="chartContainer">
+        <canvas id="tempChart"></canvas>
+    </div>
+
+    <script>
+        // Địa chỉ WebSocket Server của Node.js (cổng 8080)
+        const WS_SERVER_URL = 'ws://localhost:8080'; 
+        const maxDataPoints = 15; // Giới hạn 15 điểm dữ liệu trên biểu đồ
+        
+        // --- KHỞI TẠO BIỂU ĐỒ CHART.JS ---
+        const ctx = document.getElementById('tempChart').getContext('2d');
+        const tempChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [], // Dữ liệu trục X: Thời gian
+                datasets: [{
+                    label: 'Nhiệt độ (°C)',
+                    data: [], // Dữ liệu trục Y: Giá trị nhiệt độ
+                    borderColor: '#e74c3c', // Màu đỏ
+                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // Cho phép tùy chỉnh kích thước
+                scales: {
+                    y: {
+                        title: { display: true, text: 'Nhiệt độ (°C)' },
+                        beginAtZero: false
+                    }
+                },
+                plugins: {
+                    legend: { display: true }
+                }
+            }
+        });
+
+        // --- KẾT NỐI VÀ XỬ LÝ DỮ LIỆU WEBSOCKET ---
+        const ws = new WebSocket(WS_SERVER_URL); 
+
+        ws.onopen = () => {
+            console.log('✅ Đã kết nối tới WebSocket Server.');
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                // Dữ liệu nhận được là JSON string từ Node.js
+                const data = JSON.parse(event.data); 
+                
+                // Cập nhật các Label hiển thị
+                document.getElementById('currentTemp').innerText = data.temp.toFixed(1);
+                document.getElementById('currentHum').innerText = data.hum.toFixed(1);
+
+                // Thêm dữ liệu vào biểu đồ
+                updateChart(data.time, data.temp);
+
+            } catch (error) {
+                console.error("❌ Lỗi khi xử lý dữ liệu WebSocket:", error);
+            }
+        };
+
+        ws.onclose = () => {
+            console.log('🛑 Mất kết nối tới WebSocket Server.');
+        };
+
+        ws.onerror = (error) => {
+            console.error('Lỗi WebSocket:', error);
+        };
+        
+        // --- HÀM CẬP NHẬT BIỂU ĐỒ ---
+        function updateChart(time, temperature) {
+            // Thêm giá trị mới
+            tempChart.data.labels.push(time);
+            tempChart.data.datasets[0].data.push(temperature);
+            
+            // Giới hạn số điểm dữ liệu để biểu đồ không quá dài
+            if (tempChart.data.labels.length > maxDataPoints) {
+                tempChart.data.labels.shift(); // Xóa giá trị cũ nhất (trục X)
+                tempChart.data.datasets[0].data.shift(); // Xóa giá trị cũ nhất (trục Y)
+            }
+            
+            // Cập nhật biểu đồ
+            tempChart.update();
+        }
+    </script>
+</body>
+</html>
